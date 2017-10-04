@@ -3,8 +3,6 @@ import sys
 import time
 from thread import *
  
-
-
 HOST = ""   # Symbolic name meaning all available interfaces
 PORT = 5013 # Server socket port
 leader = True
@@ -17,26 +15,29 @@ numbers = {}
 ELECTION_INTERVAL = 3000
 sendMsg = False
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 print("Socket created")
  
 #Bind server socket to local host and port
 try:
     serverSocket.bind((HOST, PORT))
 except socket.error as msg:
-    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+    print("Bind failed. Error Code : {} Message {}".format(msg[0], msg[1]))
     sys.exit()
-print 'Socket bind complete'
+print("Socket bind complete")
  
 #Start listening on socket
 serverSocket.listen(10)
-print 'Socket now listening'
+print("Socket now listening")
  
 # listen and  create communication threads
 def listenerThread():
     while True:
         #wait to accept a connection - blocking call
         conn, addr = serverSocket.accept()
+
         print 'Connected with ' + addr[0] + ':' + str(addr[1])
          
         #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
