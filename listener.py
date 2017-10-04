@@ -11,13 +11,14 @@ class Listener:
     connections = []
     communicationQueue = Queue()
 
-    def __init__(self, host, port, number):
+    def __init__(self, host, port, number, leader=False):
         self.listenerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listenerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # o proprio ta por default na lista dele
         # peers e um dicionario com endereco e porta
         self.host = host
         self.port = port
+        self.leader = leader
         self.peers[host] = port
         self.number = number
 
