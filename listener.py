@@ -5,7 +5,7 @@ import threading
 from queue import Queue
 from computingThread import ComputingThread
 
-class Manager:
+class Listener:
 
     peers = {}
     connections = []
