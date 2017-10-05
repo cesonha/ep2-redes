@@ -4,10 +4,10 @@ import queue
 class ComputingThread(threading.Thread):
 
 
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, daemon=None):
+    def __init__(self, communicationQueue, number, group=None, target=None, name=None, args=(), kwargs={}, daemon=None):
         super().__init__(group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
-        self.queue = kwargs['queue']
-        self.number = kwargs['number']
+        self.queue = communicationQueue
+        self.number = number
 
     def run(self):
         begin = 0

@@ -5,13 +5,13 @@ import threading
 from queue import Queue
 from computingThread import ComputingThread
 
-class Listener:
+class Listener(threading.Thread):
 
-    peers = {}
-    connections = []
-    communicationQueue = Queue()
-
-    def __init__(self, host, port, number, leader=False):
+    peers = ['localhost']
+    
+    def __init__(self, host, port, number, communicationQueue, leader = False, \
+                    group=None, target=None, name=None, args=(), kwargs={}, daemon=None):
+        super().__init__(group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
         self.listenerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listenerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # o proprio ta por default na lista dele
@@ -19,7 +19,6 @@ class Listener:
         self.host = host
         self.port = port
         self.leader = leader
-        self.peers[host] = port
         self.number = number
 
     def run(self):
@@ -29,32 +28,28 @@ class Listener:
             print("Bind failed. Error Code : {} Message {}".format(msg[0], msg[0]))
             sys.exit()
 
-        running = True
         self.listenerSocket.listen(10)
-        calculationThread = ComputingThread(kwargs={'number': self.number, 'queue': self.communicationQueue})
-        calculationThread.start()
-        while running:
+        while True:
            conn, addr = self.listenerSocket.accept()
-           self.connections.append(conn)
-           self.peers[addr[0]] = addr[1]
+           peers.append(addr[0])
            handlerThread = threading.Thread(self.handlePeer, args=(conn, addr))
            handlerThread.start()
 
     def handlePeer(self, conn, addr):
-        while True:
-            data = conn.recv(1024)
-            if not data:
-                break
-            if ("any" in data):
-                conn.sendall("any")
-            else:
-                print("recebido: " + data)
-                conn.sendall("OK " + data)
+        try :
+            while True:
+                data = conn.recv(1024)
+                if not data:
+                    break
+                if "PEERS" in data:
+                    conn.sendall(message )
+                elif "CHUNK" in data:
+                    print("recebido: " + data)
+                    conn.sendall("OK " + data)
+        finally:
+            conn.close()
 
-    def updatePeers(self):
+    def peers(self):
         message = "PEERS "
         message += "(" + ", ".join("{}:{}".format(host, port) for host, port in self.peers.items()) + ")"
-
-        for connection in self.connections:
-            connection.send(message)
-
+        return message
