@@ -15,6 +15,9 @@ class Communicator(threading.Thread):
     def run(self):
         try:
             self.communicatorSocket.connect((self.addr, self.port))
+            self.communicatorSocket.send(b'NUMBERS')
+            data = self.communicatorSocket.revc(1024)
+            self.communicatorSocket.close()
         except ConnectionRefusedError:
             print("Nao consegui me conectar com {}:{}".format(self.addr, self.port))
         return

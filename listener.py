@@ -3,35 +3,40 @@ import sys
 import time
 import threading
 from queue import Queue
-from computingThread import ComputingThread
 
 class Listener(threading.Thread):
 
-    peers = ['localhost']
-    
-    def __init__(self, host, port, number, communicationQueue, leader = False, \
+    peers = set()
+    numbers = []
+
+    def __init__(self, host, port, communicationQueue, number=None, logger=None, leader=False, \
                     group=None, target=None, name=None, args=(), kwargs={}, daemon=None):
         super().__init__(group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
         self.listenerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listenerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # o proprio ta por default na lista dele
-        # peers e um dicionario com endereco e porta
         self.host = host
+        peers.add(host)
         self.port = port
         self.leader = leader
+        self.logger = logger
+        self.queue = communicationQueue
         self.number = number
+        if Leader is True:
+            numbers = [False for i in range(number)]
 
     def run(self):
         try :
             self.listenerSocket.bind((self.host, self.port))
         except socket.error as msg:
-            print("Bind failed. Error Code : {} Message {}".format(msg[0], msg[0]))
+            self.logger.error("Problemas na hora de fazer o binding erro: {} {}".format(msg[0], msg[1]))
             sys.exit()
-
+        self.logger.info("Consegui me conectar!")
         self.listenerSocket.listen(10)
         while True:
            conn, addr = self.listenerSocket.accept()
-           peers.append(addr[0])
+           self.logger.debug("A maquina no IP {} se conectou comigo".format(addr[0]))
+           peers.add(addr[0])
            handlerThread = threading.Thread(self.handlePeer, args=(conn, addr))
            handlerThread.start()
 
@@ -42,14 +47,15 @@ class Listener(threading.Thread):
                 if not data:
                     break
                 if "PEERS" in data:
-                    conn.sendall(message )
+                    self.logger.debug("Pediram a lista de PEERS")
+                    conn.sendall(peersList())
                 elif "CHUNK" in data:
-                    print("recebido: " + data)
+                    self.logger.debug("Recebido {}".format(data))
                     conn.sendall("OK " + data)
         finally:
             conn.close()
 
-    def peers(self):
+    def peersList(self):
         message = "PEERS "
-        message += "(" + ", ".join("{}:{}".format(host, port) for host, port in self.peers.items()) + ")"
+        message += "(" + ", ".join("{}".format(peer) for peer in peers) + ")"
         return message
