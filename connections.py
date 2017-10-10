@@ -20,7 +20,7 @@ def heartbeat(scheduler, connections, logger, port=5999):
             del connections[idx]
         finally:
             sock.close()
-    scheduler.enter(10, 1, heartbeat, (scheduler, connections, logger, port,))         
+    scheduler.enter(0.1, 1, heartbeat, (scheduler, connections, logger, port,))         
 
 
 

@@ -117,9 +117,6 @@ def follower():
     server_address = ('0.0.0.0', PORT)
     sock.bind(server_address)
     sock.listen(1)
-    scheduler = sched.scheduler(time.time, time.sleep)
-    scheduler.enter(10, 1, connections.heartbeat, (scheduler, activeConnections, logger, port,))
-    scheduler.run()
     while True:
         connection, client_address = sock.accept()
         connectionThread = threading.Thread(target=handlePeer, args=(connection, client_address))
@@ -129,13 +126,12 @@ def follower():
 
 def main():
     global isComposite
-
+    scheduler = sched.scheduler(time.time, time.sleep)
+    scheduler.enter(1, 1, connections.heartbeat, (scheduler, activeConnections, port,))
+    scheduler.run()
     if len(sys.argv) < 2:
         follower()
     else:
-        scheduler = sched.scheduler(time.time, time.sleep)
-        scheduler.enter(10, 1, connections.heartbeat, (scheduler, activeConnections, port,))
-        scheduler.run()
         threads.append(threading.Thread(target=connectionDetector))
         threads[0].start()
         while True:
