@@ -1,12 +1,15 @@
 from connections import *
+import time
 
 
 def main():
-    socket.setdefaulttimeout(10.0)
     startListening()
     findAvailableMachines()
-    startHeartbeat()
+    #startHeartbeat()
     broadcastArrival()
+
+    while True:
+        time.sleep(1)
 
 
 if __name__ == '__main__':

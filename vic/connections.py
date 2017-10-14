@@ -68,7 +68,6 @@ def heartbeat(scheduler):
         connection = activeConnections.pop(0)
 
     try:
-        print("pinging", connection.getpeername())
         ping(connection)
         data = connection.recv(4096)
         if 'PONG' not in data.decode('utf-8'):
@@ -89,6 +88,8 @@ def startHeartbeat():
 
 
 def handlePeer(connection, address):
+    global PORT
+
     try:
         while True:
             data = connection.recv(4096)
@@ -100,7 +101,7 @@ def handlePeer(connection, address):
 
 
                 elif "HELLO" in decoded_data:
-                    tryToAddToPool(address[0], address[1])
+                    tryToAddToPool(address[0], PORT)
                     answerHello(connection)
 
             else:
@@ -118,7 +119,7 @@ def listen():
     server_address = ('0.0.0.0', PORT)
     sock.bind(server_address)
     sock.listen(1)
-    while True: # TODO when does this loop breaks?
+    while True:
         try:
             connection, client_address = sock.accept()
             connectionThread = threading.Thread(target=handlePeer, args=[connection, client_address])
@@ -142,6 +143,5 @@ def broadcastArrival():
             try:
                 hello(connection)
                 data = connection.recv(4096)
-                print(data)
             except:
                 pass
