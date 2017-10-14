@@ -56,35 +56,35 @@ def findAvailableMachines():
         thread.join()
 
 
-# TODO when does this thread dies?
-def heartbeat(scheduler):
+def heartbeat():
     global activeConnections
 
     with lock:
-        if not len(activeConnections):
-            scheduler.enter(0.1, 0.5, heartbeat, (scheduler,))
-            return
+        connection = activeConnections.pop(0) if len(activeConnections) > 0 else None
 
-        connection = activeConnections.pop(0)
+    if connection is not None:
+        ip = connection.getpeername()[0]
+        try:
+            ping(connection)
+            data = connection.recv(4096)
+            if 'PONG' not in data.decode('utf-8'):
+                raise Exception()
 
-    try:
-        ping(connection)
-        data = connection.recv(4096)
-        if 'PONG' not in data.decode('utf-8'):
-            raise Exception()
+            with lock:
+                activeConnections.append(connection)
+        except:
+            print("disconnecting from", ip)
+            connection.close()
 
-        with lock:
-            activeConnections.append(connection)
-    except:
-        connection.close()
-
-    scheduler.enter(0.1, 0.5, heartbeat, (scheduler,))
+    timer = threading.Timer(1, heartbeat)
+    timer.daemon = True
+    timer.start()
 
 
 def startHeartbeat():
-    scheduler = sched.scheduler(time.time, time.sleep)
-    scheduler.enter(1, 0.5, heartbeat, (scheduler,))
-    scheduler.run()
+    timer = threading.Timer(1, heartbeat)
+    timer.daemon = True
+    timer.start()
 
 
 def handlePeer(connection, address):

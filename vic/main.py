@@ -5,7 +5,7 @@ import time
 def main():
     startListening()
     findAvailableMachines()
-    #startHeartbeat()
+    startHeartbeat()
     broadcastArrival()
 
     while True:
