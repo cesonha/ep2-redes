@@ -25,6 +25,9 @@ def tryToAddToPool(ip, port):
     global activeConnections
     global lock
 
+    if ip == getMyIP():
+        return
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = (ip, port)
     try:
@@ -67,7 +70,8 @@ def heartbeat(scheduler):
     try:
         print("pinging", connection.getpeername())
         ping(connection)
-        if 'PONG' not in connection.recv(4096).decode('utf-8'):
+        data = connection.recv(4096)
+        if 'PONG' not in data.decode('utf-8'):
             raise Exception()
 
         with lock:
@@ -115,10 +119,13 @@ def listen():
     sock.bind(server_address)
     sock.listen(1)
     while True: # TODO when does this loop breaks?
-        connection, client_address = sock.accept()
-        connectionThread = threading.Thread(target=handlePeer, args=[connection, client_address])
-        connectionThread.daemon = True
-        connectionThread.start()
+        try:
+            connection, client_address = sock.accept()
+            connectionThread = threading.Thread(target=handlePeer, args=[connection, client_address])
+            connectionThread.daemon = True
+            connectionThread.start()
+        except:
+            pass
 
 
 def startListening():
@@ -127,3 +134,14 @@ def startListening():
     thread.start()
 
 
+def broadcastArrival():
+    global activeConnections
+
+    with lock:
+        for connection in activeConnections:
+            try:
+                hello(connection)
+                data = connection.recv(4096)
+                print(data)
+            except:
+                pass

@@ -2,7 +2,7 @@ from connections import *
 
 
 def main():
-    socket.setdefaulttimeout(0.5)
+    socket.setdefaulttimeout(10.0)
     startListening()
     findAvailableMachines()
     startHeartbeat()
