@@ -76,13 +76,13 @@ def heartbeat():
             print("disconnecting from", ip)
             connection.close()
 
-    timer = threading.Timer(1, heartbeat)
+    timer = threading.Timer(0.5, heartbeat)
     timer.daemon = True
     timer.start()
 
 
 def startHeartbeat():
-    timer = threading.Timer(1, heartbeat)
+    timer = threading.Timer(0.5, heartbeat)
     timer.daemon = True
     timer.start()
 
@@ -103,6 +103,9 @@ def handlePeer(connection, address):
                 elif "HELLO" in decoded_data:
                     tryToAddToPool(address[0], PORT)
                     answerHello(connection)
+
+                elif "CHUNK" in decoded_data:
+                    answerChunk(connection, decoded_data)
 
             else:
                 break

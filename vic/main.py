@@ -1,5 +1,6 @@
 from connections import *
-import time
+from distributing import *
+import sys
 
 
 def main():
@@ -8,8 +9,8 @@ def main():
     startHeartbeat()
     broadcastArrival()
 
-    while True:
-        time.sleep(1)
+    if len(sys.argv) == 2:
+        startLeaderThread(int(sys.argv[1]))
 
 
 if __name__ == '__main__':
