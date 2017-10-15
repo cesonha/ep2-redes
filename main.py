@@ -28,9 +28,10 @@ def main():
     while True:
         time.sleep(1)
         with gl.lock:
-            if gl.done or (gl.state == "LEADER" and gl.broadcasted_count >= len(gl.connected_ips) - 1):
+            if gl.done and (gl.state != "LEADER" or gl.broadcasted_count >= len(gl.connected_ips) - 1):
                 print(gl.p, "is", "not prime" if gl.isComposite else "prime")
                 break
+
 
 if __name__ == "__main__":
     main()

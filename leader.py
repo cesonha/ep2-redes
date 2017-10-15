@@ -44,6 +44,8 @@ def talkToServer(address, port):
                     done = (gl.isComposite or gl.processed_count >= gl.original_interval_count) and gl.state == "LEADER"
                     is_prime = not gl.isComposite
                 if done:
+                    with gl.lock:
+                        gl.done = done
                     try:
                         finished(connection, is_prime, getMyIP())
                         xoxo = connection.recv(4096)
@@ -106,9 +108,15 @@ def testIntervalMyself():
             time.sleep(1)
             continue
 
+        with gl.lock:
+            done = gl.isComposite or gl.processed_count >= gl.original_interval_count
+            if done:
+                gl.done = done
+
         try:
             with gl.lock:
                 interval = gl.intervals.pop(0)
+            print("computing", interval, "myself")
         
             for d in range(interval[0], interval[1]):
                 with gl.lock:
