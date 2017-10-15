@@ -90,6 +90,9 @@ def talkToServer(address, port):
                                 gl.processed_count += 1
                                 gl.calculated_intervals.remove(interval)
                         else:
+                            with gl.lock:
+                                if gl.debug:
+                                    gl.logger.debug("machine at {} disconected".format(address))
                             break
                 except:
                     with gl.lock:
