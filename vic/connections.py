@@ -97,6 +97,7 @@ def startHeartbeat():
 def handlePeer(connection, address):
     global PORT
     global activeConnections 
+    global lock
 
     print("peer at {} is connected".format(address))
     try:
