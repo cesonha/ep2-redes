@@ -34,8 +34,10 @@ def tryToAddToPool(ip, port):
         sock.connect(server_address)
         print("connected to", server_address)
         with lock:
-            activeConnections.append(sock)
+            activeConnections.append(server_address)
     except (ConnectionRefusedError, OSError) as e:
+        pass
+    finally:
         sock.close()
     return
 
@@ -60,10 +62,12 @@ def heartbeat():
     global activeConnections
 
     with lock:
-        connection = activeConnections.pop(0) if len(activeConnections) > 0 else None
+        connectionAddr = activeConnections.pop(0) if len(activeConnections) > 0 else None
 
-    if connection is not None:
+    if connectionAddr is not None:
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
+            connection.connect(connectionAddr)
             ip = connection.getpeername()[0]
             ping(connection)
             data = connection.recv(4096)
@@ -73,7 +77,9 @@ def heartbeat():
             with lock:
                 activeConnections.append(connection)
         except:
-            print("disconnecting from", connection)
+            print("Unexpected error:", sys.exc_info()[0])
+            print("disconnecting from", connection_addr)
+        finally:
             connection.close()
 
     timer = threading.Timer(0.5, heartbeat)
@@ -142,8 +148,10 @@ def broadcastArrival():
     global activeConnections
 
     with lock:
-        for connection in activeConnections:
+        for connectionAddr in activeConnections:
+            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
+                connection.connect(connectionAddr)
                 hello(connection)
                 data = connection.recv(4096)
             except:
