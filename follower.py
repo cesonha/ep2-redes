@@ -5,8 +5,6 @@ import gvars as gl
 
 def handleClient(connection, client_address):
     print("connected to new client:", client_address)
-    if debug:
-        gl.logger.debug("connection to: {}".format(client_address))
     try:
         while True:
             data = connection.recv(4096)
