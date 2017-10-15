@@ -79,7 +79,7 @@ def heartbeat():
                 activeConnections.append(connectionAddr)
         except:
             print("Unexpected error:", sys.exc_info()[0])
-            print("disconnecting from", connection_addr)
+            print("disconnecting from", connectionAddr)
         finally:
             connection.close()
 
