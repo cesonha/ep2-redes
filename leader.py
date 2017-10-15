@@ -41,7 +41,7 @@ def talkToServer(address, port):
                     continue
 
                 with gl.lock:
-                    done = (gl.isComposite or gl.processed_count >= gl.original_interval_count) and state == "LEADER"
+                    done = (gl.isComposite or gl.processed_count >= gl.original_interval_count) and gl.state == "LEADER"
                     is_prime = not gl.isComposite
                 if done:
                     try:
@@ -51,6 +51,7 @@ def talkToServer(address, port):
                             raise Exception()
                         with gl.lock:
                             gl.broadcasted_count += 1
+                        return
                     except:
                         raise
                         break

@@ -46,8 +46,7 @@ def finished(connection, is_prime, origin_of_answer):
     connection.send(bytes("DONE {} {}".format(is_prime, origin_of_answer), "utf-8"))
 
 def answerFinished(connection, received_data):
+    connection.send(bytes("XOXO", "utf-8"))
     with gl.lock:
         gl.done = True
-
-    connection.send(bytes("XOXO", "utf-8"))
 
