@@ -63,8 +63,8 @@ def heartbeat():
         connection = activeConnections.pop(0) if len(activeConnections) > 0 else None
 
     if connection is not None:
-        ip = connection.getpeername()[0]
         try:
+            ip = connection.getpeername()[0]
             ping(connection)
             data = connection.recv(4096)
             if 'PONG' not in data.decode('utf-8'):
@@ -73,7 +73,7 @@ def heartbeat():
             with lock:
                 activeConnections.append(connection)
         except:
-            print("disconnecting from", ip)
+            print("disconnecting from", connection)
             connection.close()
 
     timer = threading.Timer(0.5, heartbeat)
