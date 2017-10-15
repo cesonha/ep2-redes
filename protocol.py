@@ -39,6 +39,12 @@ def answerChunk(connection, recv_data):
 def ping(connection):
     connection.send(bytes("PING", "utf-8"))
 
+def vote(connection, voteIP):
+    connection.send(bytes("VOTE {}".format(voteIP), "utf-8"))
+
+def answerVote(connection):
+    vote(connection, getMyVoteIP())
+
 def answerPing(connection):
     connection.send(bytes("PONG", "utf-8"))
 
@@ -50,3 +56,5 @@ def answerFinished(connection, received_data):
     with gl.lock:
         gl.done = True
 
+def notifyLeader(connection):
+    connection.send(bytes("LEADER", "utf-8"))

@@ -29,6 +29,13 @@ def handleClient(connection, client_address):
                     answerPing(connection)
                 elif "DONE" in decoded:
                     answerFinished(connection, decoded)
+                elif "VOTE" in decoded:
+                    with gl.lock:
+                        if gl.executionMode == "COMPUTING":
+                            gl.executionMode = "VOTING"
+                    args = decoded.split(" ")
+                    receivedVote = args[1]
+                    answerVote(connection)
             else:
                 break
     finally:
