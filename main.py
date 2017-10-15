@@ -27,10 +27,12 @@ def main():
     if "-d" in sys.argv:
         with gl.lock:
             gl.debug = True
-            gl.logger = logging.FileHandler("general.log")
+            gl.logger = logging.getLogger("EP2")
+            fh = logging.FileHandler("general.log")
             gl.logger.setLevel(logging.DEBUG)
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            gl.logger.setFormatter(formatter)
+            fh.setFormatter(formatter)
+            gl.logger.addHandler(fh)
 
     startFollowerThread()
     startLeaderThread()
