@@ -30,11 +30,12 @@ def handleClient(connection, client_address):
                 elif "DONE" in decoded:
                     answerFinished(connection, decoded)
                 elif "VOTE" in decoded:
-                    with gl.lock:
-                        if gl.executionMode == "COMPUTING":
-                            gl.executionMode = "VOTING"
                     args = decoded.split(" ")
                     receivedVote = args[1]
+                    with gl.lock:
+                        gl.votes[client_address] = receivedVote
+                        if gl.executionMode == "COMPUTING":
+                            gl.executionMode = "VOTING"
                     answerVote(connection)
             else:
                 break

@@ -137,28 +137,34 @@ def election():
         print("starting elections to new leader")
         with gl.lock:
             gl.executionMode = "VOTING"
-        votes = []
         agreement = False
         while not agreement:
             with gl.lock:
+                gl.votes[getMyIP()] = getMyVoteIP() 
                 for connectedIp in gl.connected_ips:
                     try:
                         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         server_address = (connectedIp, gl.PORT)
                         connection.connect(server_address)
                         vote(connection, getMyVoteIP())
-                        votes.append(connection.recv(4096))
+                        data = connection.recv(4096)
+                        message = data.decode("utf-8")
+                        if "VOTE" in message:
+                            receivedVote = message.split(" ")[-1]
+                            votes[connectedIp] = receivedVote
+                        else:
+                            raise Exception()
                     except:
                         raise
                         pass
                     finally: 
                         connection.close()
-            agreement = votes[1:] == votes[:-1]
+            agreement = all(vote == votes[getMyIP()] for vote in votes.values())
             if not agreement:
                 votes.clear()
         try:
             leaderConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            leaderConnection.connect((votes[0], gl.PORT))
+            leaderConnection.connect((votes[getMyIP()], gl.PORT))
             notifyLeader(leaderConnection)
         except:
             raise

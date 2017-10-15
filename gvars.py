@@ -13,6 +13,7 @@ calculated_intervals = None
 original_interval_count = None 
 start = None
 connected_ips = []
+votes = {}
 leader_ip = ''
 done = False
 broadcasted_count = 0
