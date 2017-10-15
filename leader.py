@@ -16,8 +16,9 @@ def talkToServer(address, port):
             data = connection.recv(4096)
 
             time_of_last_interaction = time.time()
-
             with gl.lock:
+                if gl.debug:
+                    gl.logger.debug("connected to {}".format(address))
                 gl.connected_ips.append(address)
 
             while True: # try to make request loop 
@@ -35,6 +36,9 @@ def talkToServer(address, port):
                                 raise Exception()
                             time_of_last_interaction = time.time()
                         except:
+                            with gl.lock:
+                                if gl.debug:
+                                    gl.logger.debug("machine at {} disconected".format(address))
                             raise
                             break
                     time.sleep(1)
@@ -47,7 +51,7 @@ def talkToServer(address, port):
                     with gl.lock:
                         gl.done = done
                     try:
-                        finished(connection, is_prime, getMyIP())
+                        finished(connection, is_prime,gl.foundBy)
                         xoxo = connection.recv(4096)
                         if "XOXO" not in xoxo.decode("utf-8"):
                             raise Exception()
@@ -80,6 +84,7 @@ def talkToServer(address, port):
                             if "COMPOSITE" in data.decode("utf-8"):
                                 with gl.lock:
                                     gl.isComposite = True
+                                    gl.foundBy = address
 
                             with gl.lock:
                                 gl.processed_count += 1
@@ -125,6 +130,7 @@ def testIntervalMyself():
                 with gl.lock:
                     if gl.p % d == 0:
                         gl.isComposite = True
+                        gl.foundBy = getMyIP()
             with gl.lock:
                 gl.processed_count += 1
                 gl.calculated_intervals.remove(interval)
@@ -134,7 +140,9 @@ def testIntervalMyself():
 
 def election():
     if gl.state == "LEADER":
-        print("starting elections to new leader")
+        print("starting elections for new leader")
+        if gl.debug:
+            gl.logger.debug("starting elections for new leader")
         with gl.lock:
             gl.executionMode = "VOTING"
         agreement = False
@@ -162,6 +170,8 @@ def election():
             agreement = all(vote == votes[getMyIP()] for vote in votes.values())
             if not agreement:
                 votes.clear()
+        if gl.debug:
+            gl.logger.debug("new leader is {}".format(votes[getMyIP()]))
         try:
             leaderConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             leaderConnection.connect((votes[getMyIP()], gl.PORT))
@@ -191,5 +201,5 @@ def startLeaderThread():
     thread.daemon = True
     thread.start()
 
-    timer = threading.Timer(30.0, election)
-    timer.start()
+    #timer = threading.Timer(30.0, election)
+    #timer.start()

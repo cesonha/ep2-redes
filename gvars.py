@@ -17,3 +17,6 @@ votes = {}
 leader_ip = ''
 done = False
 broadcasted_count = 0
+logger = None
+debug = False
+foundBy = ""

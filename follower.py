@@ -5,7 +5,8 @@ import gvars as gl
 
 def handleClient(connection, client_address):
     print("connected to new client:", client_address)
-
+    if debug:
+        gl.logger.debug("connection to: {}".format(client_address))
     try:
         while True:
             data = connection.recv(4096)
@@ -28,6 +29,14 @@ def handleClient(connection, client_address):
                 elif "PING" in decoded:
                     answerPing(connection)
                 elif "DONE" in decoded:
+                    args = decoded.split(" ")
+                    isPrime = args[1]
+                    foundBy = args[2]
+                    if gl.debug:
+                        if isPrime is "True":
+                            gl.logger.debug("{} is prime".format(gl.p))
+                        else:
+                            gl.logger.debug("{} is composite, informed by {}".format(gl.p, foundBy))
                     answerFinished(connection, decoded)
                 elif "VOTE" in decoded:
                     args = decoded.split(" ")
