@@ -37,7 +37,7 @@ def tryToAddToPool(ip, port):
             activeConnections.append(sock)
     except (ConnectionRefusedError, OSError) as e:
         sock.close()
-
+    return
 
 def findAvailableMachines():
     global PORT
@@ -54,7 +54,7 @@ def findAvailableMachines():
 
     for thread in threads:
         thread.join()
-
+    print("founded active connections")
 
 def heartbeat():
     global activeConnections
@@ -89,7 +89,7 @@ def startHeartbeat():
 
 def handlePeer(connection, address):
     global PORT
-
+    print("peer at {} is connected".format(address))
     try:
         while True:
             data = connection.recv(4096)

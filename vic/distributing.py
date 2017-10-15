@@ -20,28 +20,30 @@ def sendChunkRequest(connection):
     global intervals
     global isPrime
 
-    try:
-        with computing_lock:
-            interval = intervals.pop(0)
-    except:
-        return
-
-    try:
-        chunk(connection, interval, -1)
-        data = sock.recv(4096)
-
-        if len(data):
+    while True:
+        try:
             with computing_lock:
-                processed_count += 1
+                interval = intervals.pop(0)
+        except:
+            pass
 
-            msg = data.decode('utf-8').split(' ')
+        try:
+            chunk(connection, interval, -1)
+            data = connection.recv(4096)
 
-            if msg[0] == 'COMPOSITE':
+            if len(data):
                 with computing_lock:
-                    isPrime = False
-    except:
-        with computing_lock:
-            intervals.insert(0, interval)
+                    processed_count += 1
+
+                msg = data.decode('utf-8').split(' ')
+
+                if msg[0] == 'COMPOSITE':
+                    with computing_lock:
+                        isPrime = False
+        except:
+            with computing_lock:
+                intervals.insert(0, interval)
+            return
 
 
 def leader():
