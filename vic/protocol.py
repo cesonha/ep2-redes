@@ -22,4 +22,5 @@ def answerChunk(connection, recv_data):
     args = recv_data.split(' ')
     i = int(args[1])
     j = int(args[2])
+    print("computando o intervalo {} a {}".format(i, j))
     connection.send(bytes(searchDivisor(prime, (i, j)), 'utf-8'))
