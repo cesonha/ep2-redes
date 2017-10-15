@@ -2,6 +2,7 @@ import socket
 import threading
 import sched
 import time
+import sys
 from protocol import *
 
 
@@ -75,7 +76,7 @@ def heartbeat():
                 raise Exception()
 
             with lock:
-                activeConnections.append(connection)
+                activeConnections.append(connectionAddr)
         except:
             print("Unexpected error:", sys.exc_info()[0])
             print("disconnecting from", connection_addr)
