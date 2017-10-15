@@ -27,6 +27,8 @@ def handleClient(connection, client_address):
                     answerHello(connection)
                 elif "PING" in decoded:
                     answerPing(connection)
+                elif "DONE" in decoded:
+                    answerFinished(connection, decoded)
             else:
                 break
     finally:

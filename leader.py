@@ -40,6 +40,21 @@ def talkToServer(address, port):
                     time.sleep(1)
                     continue
 
+                with gl.lock:
+                    done = (gl.isComposite or gl.processed_count >= gl.original_interval_count) and state == "LEADER"
+                    is_prime = not gl.isComposite
+                if done:
+                    try:
+                        finished(connection, is_prime, getMyIP())
+                        xoxo = connection.recv(4096)
+                        if "XOXO" not in xoxo.decode("utf-8"):
+                            raise Exception()
+                        with gl.lock:
+                            gl.broadcasted_count += 1
+                    except:
+                        raise
+                        break
+
                 try:
                     with gl.lock:
                         interval = gl.intervals.pop(0)

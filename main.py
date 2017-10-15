@@ -25,17 +25,12 @@ def main():
     startFollowerThread()
     startLeaderThread()
 
-    if len(sys.argv) > 1:
-        while True:
-            time.sleep(1)
-            with gl.lock:
-                if gl.isComposite or gl.processed_count >= gl.original_interval_count:
-                    print(gl.isComposite)
-                    break
-    else:
-        while True:
-            time.sleep(1)
-
+    while True:
+        time.sleep(1)
+        with gl.lock:
+            if gl.done or gl.broadcasted_count >= len(gl.connected_ips) - 1:
+                print(gl.p," is", "not prime" if gl.isComposite else "prime")
+                break
 
 if __name__ == "__main__":
     main()

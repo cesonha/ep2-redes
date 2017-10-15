@@ -13,3 +13,5 @@ original_interval_count = None
 start = None
 connected_ips = []
 leader_ip = ''
+done = False
+broadcasted_count = 0
