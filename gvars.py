@@ -2,6 +2,7 @@ import threading
 
 PORT = 5999
 state = "FOLLOWER"
+executionMode = "COMPUTING"
 test_range = 1000
 processed_count = 0
 lock = threading.Lock() 

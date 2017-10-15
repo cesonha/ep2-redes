@@ -65,24 +65,27 @@ def talkToServer(address, port):
                     continue
 
                 try:
-                    print("sending", interval, "to", server_address)
                     with gl.lock:
-                        left_end = gl.calculated_intervals[0][0]
-                    chunk(connection, interval, left_end)
-
-                    data = connection.recv(4096)
-                    if len(data):
-                        time_of_last_interaction = time.time()
-
-                        if "COMPOSITE" in data.decode("utf-8"):
-                            with gl.lock:
-                                gl.isComposite = True
-
+                        currentMode = gl.executionMode
+                    if currentMode == "COMPUTING":
+                        print("sending", interval, "to", server_address)
                         with gl.lock:
-                            gl.processed_count += 1
-                            gl.calculated_intervals.remove(interval)
-                    else:
-                        break
+                            left_end = gl.calculated_intervals[0][0]
+                        chunk(connection, interval, left_end)
+
+                        data = connection.recv(4096)
+                        if len(data):
+                            time_of_last_interaction = time.time()
+
+                            if "COMPOSITE" in data.decode("utf-8"):
+                                with gl.lock:
+                                    gl.isComposite = True
+
+                            with gl.lock:
+                                gl.processed_count += 1
+                                gl.calculated_intervals.remove(interval)
+                        else:
+                            break
                 except:
                     with gl.lock:
                         gl.intervals.append(interval)
@@ -129,6 +132,43 @@ def testIntervalMyself():
             pass
 
 
+def election():
+    if gl.state == "LEADER":
+        print("starting elections to new leader")
+        with gl.lock:
+            gl.executionMode = "VOTING"
+        votes = []
+        agreement = False
+        while not agreement:
+            with gl.lock:
+                for connectedIp in gl.connected_ips:
+                    try:
+                        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        server_address = (connectedIp, gl.PORT)
+                        connection.connect(server_address)
+                        vote(connection, getMyVoteIP())
+                        votes.append(connection.recv(4096))
+                    except:
+                        raise
+                        pass
+                    finally: 
+                        connection.close()
+            agreement = votes[1:] == votes[:-1]
+            if not agreement:
+                votes.clear()
+        try:
+            leaderConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            leaderConnection.connect((votes[0], gl.PORT))
+            notifyLeader(leaderConnection)
+        except:
+            raise
+        finally:
+            leaderConnection.close()
+        with gl.lock:
+            gl.executionMode = "COMPUTING"
+    timer = threading.Timer(30.0, election)
+    timer.start()
+
 def startLeaderThread():
     my_ip = getMyIP()
     ip_prefix = getLanPrefix(my_ip)
@@ -144,3 +184,6 @@ def startLeaderThread():
     thread = threading.Thread(target=testIntervalMyself)
     thread.daemon = True
     thread.start()
+
+    timer = threading.Timer(30.0, election)
+    timer.start()
