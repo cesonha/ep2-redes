@@ -125,6 +125,10 @@ def talkToServer(address, port):
                     gl.connected_ips.remove(address)
                 except:
                     pass
+
+                if address == gl.leader_ip:
+                    gl.state = "ELECTOR"
+
             connection.close()
 
 
@@ -158,7 +162,7 @@ def testIntervalMyself():
                             gl.intervals = [(gl.start + i * gl.test_range, min(floor(sqrt(gl.p)) + 1, gl.start + (i+1) * gl.test_range)) for i in range(ceil((sqrt(gl.p) + 1 - gl.start) / gl.test_range))]
                             gl.calculated_intervals = list(gl.intervals)
                             gl.original_interval_count = len(gl.intervals)
-                            timer = threading.Timer(5.0, beginElection)
+                            timer = threading.Timer(30.0, beginElection)
                             timer.daemon = True
                             timer.start()
                         gl.votes = {}
@@ -211,7 +215,7 @@ def beginElection():
         if gl.state == "LEADER":
             print("lider começou eleição")
             gl.state = "ELECTOR"
-            timer = threading.Timer(5.0, beginElection)
+            timer = threading.Timer(30.0, beginElection)
             timer.daemon = True
             timer.start()
 
@@ -234,6 +238,6 @@ def startLeaderThread():
 
     with gl.lock:
         if gl.state == "LEADER":
-            timer = threading.Timer(5.0, beginElection)
+            timer = threading.Timer(30.0, beginElection)
             timer.daemon = True
             timer.start()

@@ -24,10 +24,12 @@ de IPs conectados. Se o mesmo IP foi enviado por todos, a máquina nesse IP ser�
 tenha um consenso, essa votação irá ser refeita até ter um consenso.
 
     - Para que a eleição funcione perfeitamente, é necessário que todos os peers tenham recebido o IP
-do líder antes de ela iniciar.
+do líder via comando HELLO/OBEY antes de ela iniciar.
 
     - A eleição é iniciada a partir do momento em que o líder mandar um voto para um dos peers. Os votos
-    são enviados periodicamente. Se algum peer perceber que o líder caiu, ele inicia a votação.
+    são enviados periodicamente. Se algum peer perceber que o líder caiu, ele inicia a votação também.
+
+    - Ela ocorre a cada 30s por parte do líder.
 
 Conexões e heartbeat:
     - Para cada IP na rede local existe uma thread que tenta se conectar nele. O líder irá mandar requisições
