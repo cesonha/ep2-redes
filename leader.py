@@ -53,13 +53,17 @@ def talkToServer(address, port):
                         try:
                             ping(connection)
                             pong = connection.recv(4096)
-                            if "PONG" not in pong.decode("utf-8"):
-                                raise Exception()
                             time_of_last_interaction = time.time()
                         except:
                             with gl.lock:
                                 if gl.debug:
-                                    gl.logger.debug("machine at {} disconected".format(address))
+                                    gl.logger.debug("machine at {} disconnected".format(address))
+                                if address == gl.leader_ip:
+                                    gl.state = "ELECTOR"
+                                try:
+                                    gl.connected_ips.remove(address)
+                                except:
+                                    pass
                             raise
                             break
                     time.sleep(1)
@@ -111,9 +115,13 @@ def talkToServer(address, port):
                     else:
                         with gl.lock:
                             if gl.debug:
-                                gl.logger.debug("machine at {} disconected".format(address))
+                                gl.logger.debug("machine at {} disconnected".format(address))
                             if address == gl.leader_ip:
                                 gl.state = "ELECTOR"
+                            try:
+                                gl.connected_ips.remove(address)
+                            except:
+                                pass
                         break
                 except:
                     with gl.lock:
@@ -122,11 +130,10 @@ def talkToServer(address, port):
         except OSError:
             pass
         finally:
-            with gl.lock:
-                try:
-                    gl.connected_ips.remove(address)
-                except:
-                    pass
+            try:
+                gl.connected_ips.remove(address)
+            except:
+                pass
             connection.close()
 
 
@@ -141,12 +148,10 @@ def testIntervalMyself():
             try:
                 with gl.lock:
                     gl.connected_ips.sort()
-                    gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
-                    print("=====================================================")
-                    print("current leader:", gl.leader_ip)
-                    print("connected:", gl.connected_ips)
-                    print("votes:", gl.votes)
-                    print("informed:", gl.informed_electors)
+                    try:
+                        gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+                    except:
+                        gl.votes[getMyIP()] = gl.connected_ips[0]
 
                     for ip in gl.connected_ips:
                         if ip != getMyIP() and ip not in gl.informed_electors:
@@ -154,7 +159,6 @@ def testIntervalMyself():
                         possible_leaders.add(gl.votes[ip])
                     if len(possible_leaders) == 1:
                         gl.leader_ip = possible_leaders.pop()
-                        print("eleição acabou, novo lider:", gl.leader_ip)
                         am_leader = getMyIP() == gl.leader_ip
                         if am_leader:
                             gl.intervals = [(gl.start + i * gl.test_range, min(floor(sqrt(gl.p)) + 1, gl.start + (i+1) * gl.test_range)) for i in range(ceil((sqrt(gl.p) + 1 - gl.start) / gl.test_range))]
@@ -167,14 +171,12 @@ def testIntervalMyself():
                         gl.informed_electors = set()
                         gl.state = "LEADER" if am_leader else "FOLLOWER"
                     else:
-                        print("mais uma rodada de eleição")
                         gl.votes = {}
                         gl.informed_electors = set()
 
             except:
                 time.sleep(0.5)
             finally:
-                print("=====================================================")
                 time.sleep(1.0)
             continue
 
@@ -211,7 +213,6 @@ def testIntervalMyself():
 def beginElection():
     with gl.lock:
         if gl.state == "LEADER":
-            print("lider começou eleição")
             gl.state = "ELECTOR"
             timer = threading.Timer(30.0, beginElection)
             timer.daemon = True
