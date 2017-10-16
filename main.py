@@ -42,7 +42,14 @@ def main():
         with gl.lock:
             if gl.done and (gl.state != "LEADER" or gl.broadcasted_count >= len(gl.connected_ips) - 1):
                 if gl.state == "LEADER":
-                    print(gl.p, "is", "not prime" if gl.isComposite else "prime")
+                    if gl.isComposite is False:
+                        print("{} is prime".format(gl.p))
+                        if gl.debug:
+                            gl.logger.debug("{} is prime".format(gl.p))
+                    else:
+                        print("{} is composite, informed by {}".format(gl.p, gl.foundBy))
+                        if gl.debug:
+                            gl.logger.debug("{} is composite, informed by {}".format(gl.p, gl.foundBy))
                 break
 
 
