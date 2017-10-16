@@ -140,9 +140,8 @@ def testIntervalMyself():
             try:
                 with gl.lock:
                     gl.connected_ips.sort()
-                    my_vote = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+                    gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
 
-                    possible_leaders.add(my_vote)
                     for ip in gl.connected_ips:
                         possible_leaders.add(gl.votes[ip])
                     if len(possible_leaders) == 1:
