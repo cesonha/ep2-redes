@@ -194,9 +194,9 @@ def testIntervalMyself():
 
 
 def beginElection():
-    print("lider começou eleição")
     with gl.lock:
         if gl.state == "LEADER":
+            print("lider começou eleição")
             gl.state = "ELECTOR"
     timer = threading.Timer(5.0, beginElection)
     timer.daemon = True

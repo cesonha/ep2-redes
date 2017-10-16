@@ -61,7 +61,7 @@ def listen():
     sock.listen(1)
     while True:
         connection, client_address = sock.accept()
-        connectionThread = threading.Thread(target=handleClient, args=[connection, client_address, event])
+        connectionThread = threading.Thread(target=handleClient, args=[connection, client_address])
         connectionThread.daemon = True
         connectionThread.start()
 
