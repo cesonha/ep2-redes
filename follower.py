@@ -1,9 +1,10 @@
 import threading
 from protocol import *
 import gvars as gl
+import sys
 
 
-def handleClient(connection, client_address, event):
+def handleClient(connection, client_address):
     print("connected to new client:", client_address)
     done = False
     try:
@@ -20,8 +21,8 @@ def handleClient(connection, client_address, event):
                 elif "HELLO" in decoded:
                     answerHello(connection)
                 elif "OBEY" in decoded:
+                    args = decoded.split(" ")
                     with gl.lock:
-                        args = decoded.split(" ")
                         gl.p = int(args[1])
                         gl.leader_ip = args[2]
                     answerHello(connection)
@@ -40,24 +41,20 @@ def handleClient(connection, client_address, event):
                     done = True
                     break
                 elif "VOTE" in decoded:
-                    args = decoded.split(" ")
-                    receivedVote = args[1]
+                    receivedVote = decoded.split(" ")[1]
                     with gl.lock:
+                        gl.state = "ELECTOR"
                         gl.votes[client_address] = receivedVote
-                        if gl.executionMode == "COMPUTING":
-                            gl.executionMode = "VOTING"
-                            event.set()
                     answerVote(connection)
             else:
                 break
     finally:
         connection.close()
         if done:
-            import sys
             sys.exit(0)
 
 
-def listen(event):
+def listen():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ('0.0.0.0', gl.PORT)
     sock.bind(server_address)
@@ -69,38 +66,7 @@ def listen(event):
         connectionThread.start()
 
 
-def electionThread():
-    event.wait()
-    #started election
-    agreement = False
-    while not agreement:
-        with gl.lock:
-            gl.votes[getMyIP()] = getMyVoteIP() 
-            for connectedIp in gl.connected_ips:
-                try:
-                    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    server_address = (connectedIp, gl.PORT)
-                    connection.connect(server_address)
-                    vote(connection, getMyVoteIP())
-                    data = connection.recv(4096)
-                    message = data.decode("utf-8")
-                    if "VOTE" in message:
-                        receivedVote = message.split(" ")[-1]
-                        votes[connectedIp] = receivedVote
-                    else:
-                        raise Exception()
-                except:
-                    raise
-                    pass
-                finally: 
-                    connection.close()
-        agreement = all(vote == votes[getMyIP()] for vote in votes.values())
-        if not agreement:
-            votes.clear()
-        #TODO o que fazer quando achou um lider no caso dos followers
-
 def startFollowerThread():
-    event = threading.Event()
-    thread = threading.Thread(target=listen, args=[event])
+    thread = threading.Thread(target=listen)
     thread.daemon = True
     thread.start()

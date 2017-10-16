@@ -5,11 +5,12 @@ from network import *
 def hello(connection):
     with gl.lock:
         p = gl.p
+        l_ip = gl.leader_ip
 
     if p is None:
         connection.send(bytes("HELLO", "utf-8"))
     else:
-        connection.send(bytes("OBEY {} {}".format(p, getMyIP()), "utf-8"))
+        connection.send(bytes("OBEY {} {}".format(p, l_ip), "utf-8"))
 
 def answerHello(connection):
     connection.send(bytes("HI", "utf-8"))
@@ -39,11 +40,15 @@ def answerChunk(connection, recv_data):
 def ping(connection):
     connection.send(bytes("PING", "utf-8"))
 
-def vote(connection, voteIP):
+def vote(connection):
+    with gl.lock:
+        gl.connected_ips.sort()
+        voteIP = gl.connected_ips[(gl.connected_ips.index(g.leader_ip) + 1) % len(gl.connected_ips)]
+    print("my vote is", voteIP)
     connection.send(bytes("VOTE {}".format(voteIP), "utf-8"))
 
 def answerVote(connection):
-    vote(connection, getMyVoteIP())
+    connection.send(bytes("RECEIVED", "utf-8"))
 
 def answerPing(connection):
     connection.send(bytes("PONG", "utf-8"))

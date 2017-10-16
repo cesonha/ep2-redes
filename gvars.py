@@ -2,8 +2,7 @@ import threading
 
 PORT = 5999
 state = "FOLLOWER"
-executionMode = "COMPUTING"
-test_range = 1000
+test_range = 1000000
 processed_count = 0
 lock = threading.Lock() 
 isComposite = False
@@ -20,3 +19,4 @@ broadcasted_count = 0
 logger = None
 debug = False
 foundBy = ""
+informed_electors = set()

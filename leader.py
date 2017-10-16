@@ -22,6 +22,29 @@ def talkToServer(address, port):
                 gl.connected_ips.append(address)
 
             while True: # try to make request loop 
+                election = False
+                with gl.lock:
+                    if gl.state == "ELECTOR":
+                        election = True
+                if election:
+                    should_send_vote = True
+                    with gl.lock:
+                        if address in gl.informed_electors:
+                            should_send_vote = False
+                    if should_send_vote:
+                        try:
+                            vote(connection)
+                            response = connection.recv(4096)
+                            print("Sent vote to", address)
+                            time_of_last_interaction = time.time()
+                            if "RECEIVED" in response.decode("utf-8"):
+                                with gl.lock:
+                                    gl.informed_electors.add(address)
+                        except:
+                            pass
+                    time.sleep(1)
+                    continue
+
                 willSleep = False
                 with gl.lock:
                     if gl.state == "FOLLOWER":
@@ -111,6 +134,35 @@ def talkToServer(address, port):
 
 def testIntervalMyself():
     while True:
+        election = False
+        with gl.lock:
+            if gl.state == "ELECTOR":
+                election = True
+        if election:
+            possible_leaders = set()
+            try:
+                with gl.lock:
+                    for ip in gl.connected_ips:
+                        possible_leaders.add(gl.votes[ip])
+                    if len(possible_leaders) == 1:
+                        gl.leader_ip = possible_leaders.pop()
+                        print("eleição acabou, novo lider:", gl.leader_ip)
+                        am_leader = getMyIP() == gl.leader_ip
+                        if am_leader:
+                            gl.intervals = [(gl.start + i * gl.test_range, min(floor(sqrt(gl.p)) + 1, gl.start + (i+1) * gl.test_range)) for i in range(ceil((sqrt(gl.p) + 1 - gl.start) / gl.test_range))]
+                            gl.calculated_intervals = list(gl.intervals)
+                            gl.original_interval_count = len(gl.intervals)
+                        gl.state = "LEADER" if am_leader else "FOLLOWER"
+                    else:
+                        print("mais uma rodada de eleição")
+                        gl.votes = {}
+                        gl.informed_electors = set()
+                        raise Exception()
+
+            except:
+                time.sleep(0.5)
+            continue
+
         willSleep = False
         with gl.lock:
             if gl.state != "LEADER":
@@ -141,52 +193,15 @@ def testIntervalMyself():
             pass
 
 
-def election():
-    if gl.state == "LEADER":
-        print("starting elections for new leader")
-        if gl.debug:
-            gl.logger.debug("starting elections for new leader")
-        with gl.lock:
-            gl.executionMode = "VOTING"
-        agreement = False
-        while not agreement:
-            with gl.lock:
-                gl.votes[getMyIP()] = getMyVoteIP() 
-                for connectedIp in gl.connected_ips:
-                    try:
-                        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        server_address = (connectedIp, gl.PORT)
-                        connection.connect(server_address)
-                        vote(connection, getMyVoteIP())
-                        data = connection.recv(4096)
-                        message = data.decode("utf-8")
-                        if "VOTE" in message:
-                            receivedVote = message.split(" ")[-1]
-                            votes[connectedIp] = receivedVote
-                        else:
-                            raise Exception()
-                    except:
-                        raise
-                        pass
-                    finally: 
-                        connection.close()
-            agreement = all(vote == votes[getMyIP()] for vote in votes.values())
-            if not agreement:
-                votes.clear()
-        if gl.debug:
-            gl.logger.debug("new leader is {}".format(votes[getMyIP()]))
-        try:
-            leaderConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            leaderConnection.connect((votes[getMyIP()], gl.PORT))
-            notifyLeader(leaderConnection)
-        except:
-            raise
-        finally:
-            leaderConnection.close()
-        with gl.lock:
-            gl.executionMode = "COMPUTING"
-    timer = threading.Timer(30.0, election)
+def beginElection():
+    print("lider começou eleição")
+    with gl.lock:
+        if gl.state == "LEADER":
+            gl.state = "ELECTOR"
+    timer = threading.Timer(5.0, beginElection)
+    timer.daemon = True
     timer.start()
+
 
 def startLeaderThread():
     my_ip = getMyIP()
@@ -204,5 +219,6 @@ def startLeaderThread():
     thread.daemon = True
     thread.start()
 
-    #timer = threading.Timer(30.0, election)
-    #timer.start()
+    timer = threading.Timer(5.0, beginElection)
+    timer.daemon = True
+    timer.start()
