@@ -1,5 +1,6 @@
 from network import *
 from protocol import *
+from math import *
 import threading
 import time
 import gvars as gl
@@ -95,6 +96,8 @@ def talkToServer(address, port):
                     print("sending", interval, "to", server_address)
                     with gl.lock:
                         left_end = gl.calculated_intervals[0][0]
+                        gl.start = left_end
+
                     chunk(connection, interval, left_end)
 
                     data = connection.recv(4096)
@@ -190,6 +193,7 @@ def testIntervalMyself():
             with gl.lock:
                 gl.processed_count += 1
                 gl.calculated_intervals.remove(interval)
+                gl.start = gl.calculated_intervals[0][0]
         except:
             pass
 
