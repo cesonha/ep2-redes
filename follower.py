@@ -28,14 +28,13 @@ def handleClient(connection, client_address):
                 elif "DONE" in decoded:
                     args = decoded.split(" ")
                     isPrime = args[1]
-                    foundBy = args[2]
                     if gl.debug:
                         if isPrime == "True":
                             print("{} is prime".format(gl.p))
                             gl.logger.debug("{} is prime".format(gl.p))
                         else:
-                            print("{} is composite, informed by {}".format(gl.p, foundBy))
-                            gl.logger.debug("{} is composite, informed by {}".format(gl.p, foundBy))
+                            print("{} is composite, informed by {}".format(gl.p, args[2]))
+                            gl.logger.debug("{} is composite, informed by {}".format(gl.p, args[2]))
                     answerFinished(connection, decoded)
                     done = True
                     break
