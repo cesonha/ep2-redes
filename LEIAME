@@ -1,0 +1,63 @@
+Alunos:
+    Cesar Cano 8536169
+    Lucas Romão 8536214
+    Victor Sprengel 9298002
+
+Como executar o programa:
+
+python main.py -n <numero> -d
+
+O parametro -d é facultativo. Se passado, o programa entrará em modo debug e irá imprimir
+algumas informações num arquivo de log chamado general.log. Nele terá informações como
+o momento em que uma máquina estabeleceu uma conexão, quando uma máquina saiu, início
+e fim de eleição e resultado do teste de primalidade.
+
+O resultado do teste de primalidade será impresso na saida padrão independente da opcao de
+debug estar ligada ou não.
+
+Algumas considerações sobre o trabalho:
+
+Eleição: 
+    - Cada peer pega a lista de IPs com a qual têm conexão ativa, eles ordenam essa lista
+e o voto deles é o ip de endereco na posicao indice(lider) + 1 % n com n sendo o tamanho da lista
+de IPs conectados. Se o mesmo IP foi enviado por todos, a máquina nesse IP será o lider. Caso nao
+tenha um consenso, essa votação irá ser refeita até ter um consenso.
+
+    - Para que a eleição funcione perfeitamente, é necessário que todos os peers tenham recebido o IP
+do líder antes de ela iniciar.
+
+    - A eleição é iniciada a partir do momento em que o líder mandar um voto para um dos peers. Os votos
+    são enviados periodicamente. Se algum peer perceber que o líder caiu, ele inicia a votação.
+
+Conexões e heartbeat:
+    - Para cada IP na rede local existe uma thread que tenta se conectar nele. O líder irá mandar requisições
+    para elas se conseguir conectar.
+
+    - O heartbeat é feito a cada 5 segundos e é apenas feito pelos peers que não são o líder. Como o líder
+    sempre está fazendo requisições aos demais ele verifica o tempo todo qual peer está conectado.
+
+Teste de primalidade:
+    - Para os experimentos passou-se para cada peer intervalos com 100000 números. Inicialmente, o líder computa
+    todos os intervalos e a cada requisição manda um novo valor para os peers. Cada peer só terá a informação
+    do intervalo a ser calculado e o primeiro divisor não testado para, caso se torne o novo líder, calcule
+    de novo os intervalos partindo desse ponto. 
+
+    - O teste feito foi testar os divisores entre 2 e o piso da raiz quadrada do número informado.
+
+Comandos do protocolo:
+    - Toda conexão nova envia um HELLO às máquinas conectadas, essas por sua vez respondeerão com um HI
+    indicando que a conexão foi aceita. Em seguida receberá um OBEY contendo o número que está se testando
+    primalidade e o IP do líder.
+
+    - O líder mandará para cada peer o comando CHUNK passando o início e fim do intervalo a ser computado
+    além do último divisor não testado. Após realizar os cálculos, o peer irá responder com COMPOSITE 
+    e o divisor caso o número seja composto ou com UNKNOWN se nenhum número for divisor.
+
+    - Durante o heartbeat, cada peer manda um comando PING para as conexões e essas responderão com PONG caso
+    estejam ativas, caso contrário a máquina se desconectou.
+
+    - A votação é feita através do comando VOTE junto com o IP da máquina escolhida para ser a líder.
+
+    - Ao fim da computação, o líder irá enviar a cada peer o comando DONE para indicar que a computação chegou
+    ao fim e eles por sua vez responderão com XOXO para finalizar seu acesso.
+
