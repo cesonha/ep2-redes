@@ -153,6 +153,12 @@ def testIntervalMyself():
                     except:
                         gl.votes[getMyIP()] = gl.connected_ips[0]
 
+                    print("connected:", gl.connected_ips)
+                    print("votes:", gl.votes)
+                    print("current leader:", gl.leader_ip)
+                    print("informed electors:", gl.informed_electors)
+                    print("-----------------------------")
+
                     for ip in gl.connected_ips:
                         if ip != getMyIP() and ip not in gl.informed_electors:
                             raise Exception()
