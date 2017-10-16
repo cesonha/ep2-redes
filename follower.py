@@ -42,7 +42,9 @@ def handleClient(connection, client_address):
                 elif "VOTE" in decoded:
                     receivedVote = decoded.split(" ")[1]
                     with gl.lock:
-                        gl.state = "ELECTOR"
+                        if gl.state != "ELECTOR":
+                            gl.logger.debug("new election has started")
+                            gl.state = "ELECTOR"
                         gl.votes[client_address[0]] = receivedVote
                     answerVote(connection)
             else:

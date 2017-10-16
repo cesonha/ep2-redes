@@ -56,7 +56,7 @@ def talkToServer(address, port):
                     if gl.state == "FOLLOWER":
                         willSleep = True
                 if willSleep:
-                    if (time.time() - time_of_last_interaction) > 5: # 5 seconds without communicating
+                    if (time.time() - time_of_last_interaction) > 3: # 5 seconds without communicating
                         try:
                             ping(connection)
                             pong = connection.recv(4096)
@@ -66,7 +66,10 @@ def talkToServer(address, port):
                                 if gl.debug:
                                     gl.logger.debug("machine at {} disconnected".format(address))
                                 if address == gl.leader_ip:
-                                    gl.state = "ELECTOR"
+                                    if gl.state != "ELECTOR":
+                                        gl.logger.debug("new election has started")
+                                        gl.state = "ELECTOR"
+
                                 try:
                                     gl.connected_ips.remove(address)
                                 except:
@@ -122,7 +125,9 @@ def talkToServer(address, port):
                             if gl.debug:
                                 gl.logger.debug("machine at {} disconnected".format(address))
                             if address == gl.leader_ip:
-                                gl.state = "ELECTOR"
+                                if gl.state != "ELECTOR":
+                                    gl.logger.debug("new election has started")
+                                    gl.state = "ELECTOR"
                             try:
                                 gl.connected_ips.remove(address)
                             except:
@@ -169,12 +174,14 @@ def testIntervalMyself():
                             gl.intervals = [(gl.start + i * gl.test_range, min(floor(sqrt(gl.p)) + 1, gl.start + (i+1) * gl.test_range)) for i in range(ceil((sqrt(gl.p) + 1 - gl.start) / gl.test_range))]
                             gl.calculated_intervals = list(gl.intervals)
                             gl.original_interval_count = len(gl.intervals)
-                            timer = threading.Timer(30.0, beginElection)
+                            timer = threading.Timer(15.0, beginElection)
                             timer.daemon = True
                             timer.start()
                         gl.votes = {}
                         gl.informed_electors = set()
                         gl.state = "LEADER" if am_leader else "FOLLOWER"
+                        if gl.debug:
+                            gl.logger.debug("election is over, new leader is {}".format(gl.leader_ip))
                     else:
                         gl.votes = {}
                         gl.informed_electors = set()
@@ -218,8 +225,10 @@ def testIntervalMyself():
 def beginElection():
     with gl.lock:
         if gl.state == "LEADER":
-            gl.state = "ELECTOR"
-            timer = threading.Timer(30.0, beginElection)
+            if gl.state != "ELECTOR":
+                gl.logger.debug("new election has started")
+                gl.state = "ELECTOR"
+            timer = threading.Timer(15.0, beginElection)
             timer.daemon = True
             timer.start()
 
@@ -242,6 +251,6 @@ def startLeaderThread():
 
     with gl.lock:
         if gl.state == "LEADER":
-            timer = threading.Timer(30.0, beginElection)
+            timer = threading.Timer(15.0, beginElection)
             timer.daemon = True
             timer.start()

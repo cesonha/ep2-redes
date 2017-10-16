@@ -29,13 +29,13 @@ do líder via comando HELLO/OBEY antes de ela iniciar.
     - A eleição é iniciada a partir do momento em que o líder mandar um voto para um dos peers. Os votos
     são enviados periodicamente. Se algum peer perceber que o líder caiu, ele inicia a votação também.
 
-    - Ela ocorre a cada 30s por parte do líder.
+    - Ela ocorre a cada 15s por parte do líder.
 
 Conexões e heartbeat:
     - Para cada IP na rede local existe uma thread que tenta se conectar nele. O líder irá mandar requisições
     para elas se conseguir conectar.
 
-    - O heartbeat é feito a cada 5 segundos e é apenas feito pelos peers que não são o líder. Como o líder
+    - O heartbeat é feito a cada 3 segundos e é apenas feito pelos peers que não são o líder. Como o líder
     sempre está fazendo requisições aos demais ele verifica o tempo todo qual peer está conectado.
 
 Teste de primalidade:
