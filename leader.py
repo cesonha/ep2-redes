@@ -92,31 +92,28 @@ def talkToServer(address, port):
                     continue
 
                 try:
+                    print("sending", interval, "to", server_address)
                     with gl.lock:
-                        currentMode = gl.executionMode
-                    if currentMode == "COMPUTING":
-                        print("sending", interval, "to", server_address)
+                        left_end = gl.calculated_intervals[0][0]
+                    chunk(connection, interval, left_end)
+
+                    data = connection.recv(4096)
+                    if len(data):
+                        time_of_last_interaction = time.time()
+
+                        if "COMPOSITE" in data.decode("utf-8"):
+                            with gl.lock:
+                                gl.isComposite = True
+                                gl.foundBy = address
+
                         with gl.lock:
-                            left_end = gl.calculated_intervals[0][0]
-                        chunk(connection, interval, left_end)
-
-                        data = connection.recv(4096)
-                        if len(data):
-                            time_of_last_interaction = time.time()
-
-                            if "COMPOSITE" in data.decode("utf-8"):
-                                with gl.lock:
-                                    gl.isComposite = True
-                                    gl.foundBy = address
-
-                            with gl.lock:
-                                gl.processed_count += 1
-                                gl.calculated_intervals.remove(interval)
-                        else:
-                            with gl.lock:
-                                if gl.debug:
-                                    gl.logger.debug("machine at {} disconected".format(address))
-                            break
+                            gl.processed_count += 1
+                            gl.calculated_intervals.remove(interval)
+                    else:
+                        with gl.lock:
+                            if gl.debug:
+                                gl.logger.debug("machine at {} disconected".format(address))
+                        break
                 except:
                     with gl.lock:
                         gl.intervals.append(interval)
@@ -142,6 +139,10 @@ def testIntervalMyself():
             possible_leaders = set()
             try:
                 with gl.lock:
+                    gl.connected_ips.sort()
+                    my_vote = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+
+                    possible_leaders.add(my_vote)
                     for ip in gl.connected_ips:
                         possible_leaders.add(gl.votes[ip])
                     if len(possible_leaders) == 1:
@@ -157,10 +158,11 @@ def testIntervalMyself():
                         print("mais uma rodada de eleição")
                         gl.votes = {}
                         gl.informed_electors = set()
-                        raise Exception()
 
             except:
                 time.sleep(0.5)
+            finally:
+                time.sleep(1.0)
             continue
 
         willSleep = False

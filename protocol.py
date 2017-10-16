@@ -1,6 +1,7 @@
 import socket
 import gvars as gl
 from network import *
+import sys
 
 def hello(connection):
     with gl.lock:
@@ -43,8 +44,8 @@ def ping(connection):
 def vote(connection):
     with gl.lock:
         gl.connected_ips.sort()
-        voteIP = gl.connected_ips[(gl.connected_ips.index(g.leader_ip) + 1) % len(gl.connected_ips)]
-    print("my vote is", voteIP)
+        voteIP = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+    print("Sending", voteIP, "as my vote to", connection.getpeername())
     connection.send(bytes("VOTE {}".format(voteIP), "utf-8"))
 
 def answerVote(connection):
