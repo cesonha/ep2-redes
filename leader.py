@@ -112,8 +112,8 @@ def talkToServer(address, port):
                         with gl.lock:
                             if gl.debug:
                                 gl.logger.debug("machine at {} disconected".format(address))
-                         if address == gl.leader_ip:
-                            gl.state = "ELECTOR"
+                            if address == gl.leader_ip:
+                                gl.state = "ELECTOR"
                         break
                 except:
                     with gl.lock:
