@@ -44,7 +44,7 @@ def handleClient(connection, client_address):
                     receivedVote = decoded.split(" ")[1]
                     with gl.lock:
                         gl.state = "ELECTOR"
-                        gl.votes[client_address] = receivedVote
+                        gl.votes[client_address[0]] = receivedVote
                     answerVote(connection)
             else:
                 break
