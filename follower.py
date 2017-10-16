@@ -11,8 +11,6 @@ def handleClient(connection, client_address):
             data = connection.recv(4096)
 
             if len(data):
-                print("received", data, "from", client_address)
-
                 decoded = data.decode("utf-8")
 
                 if "CHUNK" in decoded:
