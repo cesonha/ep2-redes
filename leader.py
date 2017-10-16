@@ -144,6 +144,11 @@ def testIntervalMyself():
                 with gl.lock:
                     gl.connected_ips.sort()
                     gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+                    print("=====================================================")
+                    print("current leader:", gl.leader_ip)
+                    print("connected:", gl.connected_ips)
+                    print("votes:", gl.votes)
+                    print("informed:", gl.informed_electors)
 
                     for ip in gl.connected_ips:
                         if ip != getMyIP() and ip not in gl.informed_electors:
@@ -157,6 +162,9 @@ def testIntervalMyself():
                             gl.intervals = [(gl.start + i * gl.test_range, min(floor(sqrt(gl.p)) + 1, gl.start + (i+1) * gl.test_range)) for i in range(ceil((sqrt(gl.p) + 1 - gl.start) / gl.test_range))]
                             gl.calculated_intervals = list(gl.intervals)
                             gl.original_interval_count = len(gl.intervals)
+                            timer = threading.Timer(5.0, beginElection)
+                            timer.daemon = True
+                            timer.start()
                         gl.state = "LEADER" if am_leader else "FOLLOWER"
                     else:
                         print("mais uma rodada de eleição")
@@ -166,6 +174,7 @@ def testIntervalMyself():
             except:
                 time.sleep(0.5)
             finally:
+                print("=====================================================")
                 time.sleep(1.0)
             continue
 
@@ -205,9 +214,9 @@ def beginElection():
         if gl.state == "LEADER":
             print("lider começou eleição")
             gl.state = "ELECTOR"
-    timer = threading.Timer(5.0, beginElection)
-    timer.daemon = True
-    timer.start()
+            timer = threading.Timer(5.0, beginElection)
+            timer.daemon = True
+            timer.start()
 
 
 def startLeaderThread():
@@ -226,6 +235,8 @@ def startLeaderThread():
     thread.daemon = True
     thread.start()
 
-    timer = threading.Timer(5.0, beginElection)
-    timer.daemon = True
-    timer.start()
+    with gl.lock:
+        if gl.state == "LEADER":
+            timer = threading.Timer(5.0, beginElection)
+            timer.daemon = True
+            timer.start()
