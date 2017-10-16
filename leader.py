@@ -146,6 +146,8 @@ def testIntervalMyself():
                     gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
 
                     for ip in gl.connected_ips:
+                        if ip not in gl.informed_electors:
+                            raise Exception()
                         possible_leaders.add(gl.votes[ip])
                     if len(possible_leaders) == 1:
                         gl.leader_ip = possible_leaders.pop()
