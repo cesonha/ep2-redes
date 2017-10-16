@@ -12,7 +12,6 @@ def talkToServer(address, port):
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_address = (address, port)
             connection.connect(server_address)
-            print("New server:", address)
             hello(connection)
             data = connection.recv(4096)
 
@@ -36,7 +35,6 @@ def talkToServer(address, port):
                         try:
                             vote(connection)
                             response = connection.recv(4096)
-                            #print("Sent vote to", address)
                             time_of_last_interaction = time.time()
                             if "RECEIVED" in response.decode("utf-8"):
                                 with gl.lock:
@@ -53,7 +51,6 @@ def talkToServer(address, port):
                 if willSleep:
                     if (time.time() - time_of_last_interaction) > 5: # 5 seconds without communicating
                         try:
-                            print("pinging", address)
                             ping(connection)
                             pong = connection.recv(4096)
                             if "PONG" not in pong.decode("utf-8"):
@@ -93,7 +90,6 @@ def talkToServer(address, port):
                     continue
 
                 try:
-                    print("sending", interval, "to", server_address)
                     with gl.lock:
                         left_end = gl.calculated_intervals[0][0]
                         gl.start = left_end
@@ -165,6 +161,8 @@ def testIntervalMyself():
                             timer = threading.Timer(5.0, beginElection)
                             timer.daemon = True
                             timer.start()
+                        gl.votes = {}
+                        gl.informed_electors = set()
                         gl.state = "LEADER" if am_leader else "FOLLOWER"
                     else:
                         print("mais uma rodada de eleição")
@@ -194,7 +192,6 @@ def testIntervalMyself():
         try:
             with gl.lock:
                 interval = gl.intervals.pop(0)
-            print("computing", interval, "myself")
         
             for d in range(interval[0], interval[1]):
                 with gl.lock:

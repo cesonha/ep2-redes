@@ -5,7 +5,6 @@ import sys
 
 
 def handleClient(connection, client_address):
-    print("connected to new client:", client_address)
     done = False
     try:
         while True:
