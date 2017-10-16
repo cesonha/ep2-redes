@@ -43,7 +43,10 @@ def ping(connection):
 def vote(connection):
     with gl.lock:
         gl.connected_ips.sort()
-        voteIP = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+        try:
+            voteIP = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
+        except:
+            voteIP = gl.connected_ips[0]
     connection.send(bytes("VOTE {}".format(voteIP), "utf-8"))
 
 def answerVote(connection):

@@ -36,11 +36,18 @@ def talkToServer(address, port):
                             vote(connection)
                             response = connection.recv(4096)
                             time_of_last_interaction = time.time()
-                            if "RECEIVED" in response.decode("utf-8"):
-                                with gl.lock:
-                                    gl.informed_electors.add(address)
+                            with gl.lock:
+                                gl.informed_electors.add(address)
                         except:
-                            pass
+                            with gl.lock:
+                                if gl.debug:
+                                    gl.logger.debug("machine at {} disconnected".format(address))
+                                try:
+                                    gl.connected_ips.remove(address)
+                                except:
+                                    pass
+                            raise
+                            break
                     time.sleep(1)
                     continue
 
@@ -78,8 +85,6 @@ def talkToServer(address, port):
                     try:
                         finished(connection, is_prime,gl.foundBy)
                         xoxo = connection.recv(4096)
-                        if "XOXO" not in xoxo.decode("utf-8"):
-                            raise Exception()
                         with gl.lock:
                             gl.broadcasted_count += 1
                         return
@@ -152,12 +157,6 @@ def testIntervalMyself():
                         gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
                     except:
                         gl.votes[getMyIP()] = gl.connected_ips[0]
-
-                    print("connected:", gl.connected_ips)
-                    print("votes:", gl.votes)
-                    print("current leader:", gl.leader_ip)
-                    print("informed electors:", gl.informed_electors)
-                    print("-----------------------------")
 
                     for ip in gl.connected_ips:
                         if ip != getMyIP() and ip not in gl.informed_electors:
