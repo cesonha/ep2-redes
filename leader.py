@@ -36,7 +36,7 @@ def talkToServer(address, port):
                         try:
                             vote(connection)
                             response = connection.recv(4096)
-                            print("Sent vote to", address)
+                            #print("Sent vote to", address)
                             time_of_last_interaction = time.time()
                             if "RECEIVED" in response.decode("utf-8"):
                                 with gl.lock:
@@ -146,7 +146,7 @@ def testIntervalMyself():
                     gl.votes[getMyIP()] = gl.connected_ips[(gl.connected_ips.index(gl.leader_ip) + 1) % len(gl.connected_ips)]
 
                     for ip in gl.connected_ips:
-                        if ip not in gl.informed_electors:
+                        if ip != getMyIP() and ip not in gl.informed_electors:
                             raise Exception()
                         possible_leaders.add(gl.votes[ip])
                     if len(possible_leaders) == 1:
